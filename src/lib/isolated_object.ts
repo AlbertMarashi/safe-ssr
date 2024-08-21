@@ -1,6 +1,6 @@
 import { browser } from "$app/environment"
 import { uneval } from "devalue"
-import safe_ssr_store from "./safe_ssr_store.js"
+import request_symbol from "./request_symbol.js"
 
 const request_stores: WeakMap<symbol, Map<string, unknown>> = new WeakMap()
 
@@ -15,9 +15,8 @@ ${entries.map(([key, value]) => `window.__SAFE_SSR_STATE__.set(${key}, ${value})
 }
 
 function get_or_init() {
-    const request_symbol = safe_ssr_store.request_symbol()
-    if (!request_symbol) throw new Error("Safe SSR store not initialized, did you forget to wrap your hooks.server.ts with safe_request_wrapper?")
-    return request_stores.get(request_symbol) ?? request_stores.set(request_symbol, new Map()).get(request_symbol)!
+    const sym = request_symbol.current()
+    return request_stores.get(sym) ?? request_stores.set(sym, new Map()).get(sym)!
 }
 
 /**

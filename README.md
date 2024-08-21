@@ -45,7 +45,7 @@ Because state from `.ts` / `.js` modules are not returned to the browser, we nee
 
 ```svelte
 <script lang="ts">
-import SerialiseClientState from "safe-ssr/SerialiseClientState.svelte";
+import { SerialiseClientState } from "safe-ssr";
 
 let {
     children

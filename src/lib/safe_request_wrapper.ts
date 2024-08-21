@@ -1,12 +1,18 @@
 import type { MaybePromise, RequestEvent, ResolveOptions } from "@sveltejs/kit"
 import { AsyncLocalStorage } from "node:async_hooks"
-import safe_ssr_store from "./safe_ssr_store.js"
+import request_symbol from "./request_symbol.js"
 
 /// Create a new AsyncLocalStorage for to isolate requests
 const async_local_storage = new AsyncLocalStorage<symbol>()
 
 /// override the request symbol on the server-side (client-side will remain)
-safe_ssr_store.request_symbol = () => async_local_storage.getStore()
+request_symbol.current = () => {
+    const symbol = async_local_storage.getStore()
+    if (symbol === undefined) {
+        throw new Error("Request symbol has not been initialized")
+    }
+    return symbol
+}
 
 /**
  * Wraps the hooks.server.ts `handle` function to with a middleware that

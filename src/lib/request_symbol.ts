@@ -8,7 +8,7 @@ export default {
      *
      * This is safe to call only after the hooks.server.ts safe_request_wrapper has been initialized.
      */
-    request_symbol(): symbol | undefined {
+    current(): symbol {
         throw new Error("AsyncLocalStorage has not been initialized")
     }
 }
