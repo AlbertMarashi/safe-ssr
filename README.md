@@ -63,7 +63,7 @@ let {
 
 ## 4. Defining global state
 
-#### `$lib/[your_state_file].ts`
+#### `src/lib/[your_state_file].ts`
 ```ts
 // returns a reactive object, isolated from other requests
 import { safe_state } from "safe-ssr";
@@ -92,7 +92,7 @@ Simply import the module into anywhere in your app.
 
 `+page.server.ts`
 ```ts
-import { app_state } from "$lib/app_state";
+import { app_state } from "$lib/[your_state_file]";
 
 export function load() {
     app_state.inner.counter++;
@@ -102,7 +102,7 @@ export function load() {
 `+page.svelte`
 ```svelte
 <script lang="ts">
-import { app_state } from "$lib/app_state";
+import { app_state } from "$lib/[your_state_file]";
 </script>
 <!-- this will never be higher than 1, because requests are isolated -->
 { app_state.inner.counter } <button onclick={() => app_state.inner.counter++}>+</button>
@@ -163,7 +163,7 @@ async function setup_isolated_db({ event, resolve }) {
 }
 ```
 
-`$lib/db.ts`
+`src/lib/db.ts`
 ```ts
 import { request_symbol } from "safe-ssr"
 
@@ -184,7 +184,7 @@ export const db_store = {
 }
 ```
 
-`$lib/auth-state.ts`
+`src/lib/auth-state.ts`
 ```ts
 import { safe_state } from "safe-ssr"
 
