@@ -114,11 +114,11 @@ import { app_state } from "$lib/app_state";
 >
 > Maybe you wanna create a server-side database instance that is authenticated to individual users but isolated from other requests?
 >
-> Unfortunately, by default, SvelteKit **load functions waterfall**, which means if you have complex nested routes and `load` functions, you lose out on performance because all of your load functions depend on `await parent()` calls in SvelteKit.
+> Unfortunately, by default, SvelteKit **load functions waterfall**, which means if you have complex nested routes and `load` functions, you lose out on performance because all of your load functions depend on `await parent()` calls in SvelteKit to get access to the database defined in the root `+layout.svelte` file.
 >
-> Fortunately, using the `safe_request_wrapper` middleware, you can isolate your database instance to individual requests, whilst making it globally accessible across your app
+> Fortunately, using the `safe_request_wrapper` middleware, you can isolate and authenticate your database instance to individual requests, whilst making it globally accessible across your app
 >
-> This means you can turn sequential waterfalled requests into parallellised requests, which can be a huge performance boost.
+> This means you can turn sequential waterfalled requests into parallellised requests, which lead to a big performance boost!
 
 You can use the `request_symbol` store to customise and implement your own behaviour. The `request_symbol` import has a `current()` method that returns the current request symbol or throws an error if one has not been set.
 
