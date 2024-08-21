@@ -8,7 +8,7 @@ Put it at the very end of your root `+layout.svelte` file.
 -->
 <script lang="ts">
 import { browser } from "$app/environment"
-import { serialise_state } from "./isolated_object.js"
+import { serialise_state } from "./state.svelte.js"
 
 </script>
 {#if !browser}
