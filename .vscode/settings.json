@@ -1,0 +1,13 @@
+{
+    "eslint.validate": [
+        "javascript",
+        "svelte",
+        "typescript",
+    ],
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "svelte.enable-ts-plugin": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+}
