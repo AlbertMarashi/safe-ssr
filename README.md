@@ -105,7 +105,7 @@ export function load() {
 import { app_state } from "$lib/app_state";
 </script>
 <!-- this will never be higher than 1, because requests are isolated -->
-{ app_state.inner.counter } <button on:click={clicked}>+</button>
+{ app_state.inner.counter } <button onclick={() => app_state.inner.counter++}>+</button>
 ```
 
 ## Advanced usage examples
