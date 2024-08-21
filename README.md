@@ -38,7 +38,10 @@ This symbol is then **later used** to retrive state uniquely associated with the
 
 ## 3. Passing state from the server to the client
 
-Because state from `.ts` / `.js` modules are not returned to the browser, we need to manually pass them from the server to the client. This is done by using the `SerialiseClientState` component.
+Because state from `.ts` / `.js` modules are not returned to the browser, we need to manually pass them from the server to the client. This is done by using the `SerialiseClientState` component within your root `+layout.svelte` file.
+
+> [!WARNING]
+> This will serialise all of the state to the client when returning the SSR response. Make sure to put it at the very end of your root `+layout.svelte` file so that it is serialised last, ensuring that all your state is serialized to the client.
 
 ```svelte
 <script lang="ts">
@@ -48,8 +51,9 @@ let {
     children
 } = $props()
 </script>
-<SerialiseClientState/>
 {@render children()}
+<!-- Make sure to put this at the very end of your root `+layout.svelte` file -->
+<SerialiseClientState/>
 ```
 
 ## 4. Defining global state
@@ -81,7 +85,12 @@ export const app_state = $state(isolated_object("app_state", {
 ```ts
 /**
  * both isolated_state and isolated_object return the same type, which looks like this:
- * Where {T} is the type of the initial value */
+ * Where {T} is the type of the initial value
+ *
+ * We use the `inner` property to access the value
+ * Internally, `inner` is a `get` method that returns the state uniquely associated
+ * with the current request.
+ **/
 type ReturnType<T> = { inner: T }
 ```
 
@@ -89,7 +98,7 @@ type ReturnType<T> = { inner: T }
 
 Simply import the module into anywhere in your app.
 
-`+page.ts`
+`+page.server.ts`
 ```ts
 import { app_state } from "$lib/app_state";
 
@@ -103,8 +112,10 @@ export function load() {
 <script lang="ts">
 import { app_state } from "$lib/app_state";
 </script>
-<!-- this will never be higher than 1 -->
+<!-- this will never be higher than 1, because requests are isolated -->
 { app_state.inner.counter }
 ```
 
 ## Advanced usage
+
+TODO

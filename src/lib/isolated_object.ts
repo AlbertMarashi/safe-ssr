@@ -1,15 +1,25 @@
 import { browser } from "$app/environment"
+import { uneval } from "devalue"
 import safe_ssr_store from "./safe_ssr_store.js"
 
 const request_stores: WeakMap<symbol, Map<string, unknown>> = new WeakMap()
 
-export function get_current_stores(): Map<string, unknown> {
-    const request_symbol = safe_ssr_store.request_symbol()
-    if (!request_symbol) throw new Error("Safe SSR store not initialized, did you forget to wrap your hooks.server.ts with safe_request_wrapper?")
-    return request_stores.get(request_symbol) ?? new Map()
+export function serialise_state(): string {
+    const map = get_or_init()
+    const entries = Array.from(map).map(([key, value]) => [uneval(key), uneval(value)])
+
+    return `<script>
+window.__SAFE_SSR_STATE__ = new Map();
+${entries.map(([key, value]) => `window.__SAFE_SSR_STATE__.set(${key}, ${value})`).join(";")}
+</script>`
 }
 
-let unique_id = 0
+function get_or_init() {
+    const request_symbol = safe_ssr_store.request_symbol()
+    if (!request_symbol) throw new Error("Safe SSR store not initialized, did you forget to wrap your hooks.server.ts with safe_request_wrapper?")
+    return request_stores.get(request_symbol) ?? request_stores.set(request_symbol, new Map()).get(request_symbol)!
+}
+
 /**
  * @param key -The key to associate the unique store with. This is required during client-side in order to
  * figure out which store to retrieve from the window.__SAFE_SSR_STATE__ map. It must be unique
@@ -26,13 +36,9 @@ export function isolated_object<T>(key: string, initial: T): { inner: T } {
 
     return {
         get inner() {
-            const request_symbol = safe_ssr_store.request_symbol()
-            if (!request_symbol) throw new Error("Safe SSR store not initialized, did you forget to wrap your hooks.server.ts with safe_request_wrapper?")
-            const map = request_stores.get(request_symbol) ?? request_stores.set(request_symbol, new Map()).get(request_symbol)!
+            const map = get_or_init()
 
-            return (map.get(key)
-                ?? map.set(key, structuredClone(initial))
-                    .get(key)!) as T
+            return (map.get(key) ?? map.set(key, structuredClone(initial)).get(key)!) as T
         }
     }
 }
