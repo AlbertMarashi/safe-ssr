@@ -3,7 +3,7 @@ import { AsyncLocalStorage } from "node:async_hooks"
 import request_symbol from "./request_symbol.js"
 
 /// Create a new AsyncLocalStorage for to isolate requests
-const async_local_storage = new AsyncLocalStorage<symbol>()
+export const async_local_storage = new AsyncLocalStorage<symbol>()
 
 /// override the request symbol on the server-side (client-side will remain)
 request_symbol.current = () => {
@@ -39,5 +39,9 @@ export async function safe_request_wrapper({
     event: RequestEvent;
     resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
 }): Promise<Response> {
-    return async_local_storage.run(Symbol(), () => resolve(event))
+    return safe_wrapper(() => resolve(event))
+}
+
+export async function safe_wrapper<T>(cb: () => T): Promise<T> {
+    return async_local_storage.run(Symbol(), () => cb())
 }

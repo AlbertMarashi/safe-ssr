@@ -105,7 +105,9 @@ export function load() {
 import { app_state } from "$lib/[your_state_file]";
 </script>
 <!-- this will never be higher than 1, because requests are isolated -->
-{ app_state.inner.counter } <button onclick={() => app_state.inner.counter++}>+</button>
+<div>Counter: { app_state.inner.counter }</div>
+
+<button onclick={() => app_state.inner.counter++}>+</button>
 ```
 
 ## Advanced usage examples
@@ -127,6 +129,7 @@ You can use the `request_symbol` store to customise and implement your own behav
 `hooks.server.ts`
 ```ts
 import { safe_request_wrapper } from "safe-ssr/safe_request_wrapper"
+import { RequestDataStore } from "safe-ssr"
 import { sequence } from "@sveltejs/kit/hooks"
 import { auth_state } from "$lib/auth-state"
 import { req_dbs } from "$lib/db"
@@ -144,20 +147,18 @@ async function read_auth_token_cookie({ event, resolve }) {
     return resolve(event)
 }
 
-
 async function setup_isolated_db({ event, resolve }) {
     let db: Promise<Database> | undefined
-    // This gets the current unique request symbol
-    let sym = request_symbol.current()
-
+    
     // Associate the current request symbol with a function
-    // that returns a Promise<Database>
-    req_dbs.set(sym, () => {
+    // that returns a Promise<Database>, and can only be retrieved
+    // within a scoped isolated request (after the safe_request_wrapper middleware has been run)
+    req_data.data = {
         // create a lazy-loaded database instance,
         // because not every request will need one.
-        // (e.g. setup_isolated_db will get called for asset requests and etc)
-        return db ?? db = Database.connect(auth_state.inner.token)
-    })
+        // (e.g. not trigger the database connection for simple asset requests (css, js, etc))
+        get db(): db ?? db = Database.connect(auth_state.inner.token)
+    }
 
     return await resolve(event)
 }
@@ -167,20 +168,16 @@ async function setup_isolated_db({ event, resolve }) {
 ```ts
 import { request_symbol } from "safe-ssr"
 
-// We use a WeakMap, so that the database instances are
-// garbage collected after the request is complete.
-export const req_dbs = new WeakMap<symbol, () => Promise<Database>>()
+// Internally, we use a WeakMap<symbol, Promise<Database>> to store the database instances
+// so that they are garbage collected after the request with that symbol is completed.
+// This allows us to create a lazy-loaded database instance, uniquely associated with
+// the current request / authenticated user.
+const db_store = new RequestDataStore<{
+    db: Promise<Database>
+}>()
 
-export const db_store = {
-    get db() {
-        const sym = request_symbol.current()
-
-        let db = req_dbs.get(sym)
-
-        if(!db) throw new Error("Database used before it was initialised")
-
-        return db()
-    }
+export function get_db(): Promise<Database> {
+    return db_store.data.db
 }
 ```
 
@@ -197,12 +194,12 @@ export const auth_state = safe_state("auth_state", {
 `+page.server.ts`
 ```ts
 import { auth_state } from "$lib/auth-state"
-import { db_store } from "$lib/db"
+import { get_db } from "$lib/db"
 
 export async function load() {
     // get the database authenticated to the current
     // requests user, which is isolated from other requests.
-    const db = await db_store.db
+    const db = await get_db()
 
     // do something with the database
     const my_posts = await db.query("SELECT * FROM posts")
