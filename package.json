@@ -1,6 +1,6 @@
 {
   "name": "safe-ssr",
-  "version": "0.0.11",
+  "version": "0.0.13",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && npm run package",
@@ -19,6 +19,18 @@
     "./safe_request_wrapper": {
       "types": "./dist/safe_request_wrapper.d.ts",
       "svelte": "./dist/safe_request_wrapper.js"
+    },
+    "./async_store": {
+      "types": "./dist/async_store.d.ts",
+      "default": "./dist/async_store.js"
+    },
+    "./request_symbol": {
+      "types": "./dist/request_symbol.d.ts",
+      "default": "./dist/request_symbol.js"
+    },
+    "./data_store": {
+      "types": "./dist/data_store.d.ts",
+      "default": "./dist/data_store.js"
     }
   },
   "files": [
